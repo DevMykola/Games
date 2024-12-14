@@ -18,14 +18,16 @@ class XO:
         self.o_user_id = self._get_o_user_id()
         self.users = {'x': self.x_user_id, 'o': self.o_user_id}
 
-    def x_user_id_is(self, id):
+    def x_user_id_is(self, id) -> None:
+        '''визначає айді користурвача, який грає за Х'''
         with sqlite3.connect(database_path) as conn:
             cursor = conn.cursor()
             cursor.execute("UPDATE xo_games SET x_user_id=? WHERE game_id=?", (id, self.game_id))
             conn.commit()
         self.x_user_id = id
 
-    def o_user_id_is(self, id):
+    def o_user_id_is(self, id) -> None:
+        '''визначає айді користурвача, який грає за О'''
         with sqlite3.connect(database_path) as conn:
             cursor = conn.cursor()
             cursor.execute("UPDATE xo_games SET o_user_id=? WHERE game_id=?", (id, self.game_id))
@@ -54,21 +56,23 @@ class XO:
                 cursor.execute("INSERT INTO xo_games (game_id) VALUES (?)", (self.game_id,))
                 conn.commit()
     
-    def field(self):
+    def field(self) -> dict:
+        '''повертає поле гри'''
         with sqlite3.connect(database_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT field FROM xo_games WHERE game_id=?", (self.game_id,))
             field = cursor.fetchone()[0]
         return json.loads(field)
     
-    def _update_field(self, field: dict):
+    def _update_field(self, field: dict) -> None:
         field = json.dumps(field)
         with sqlite3.connect(database_path) as conn:
             cursor = conn.cursor()
             cursor.execute("UPDATE xo_games SET field=? WHERE game_id=?", (field, self.game_id))
             conn.commit()
 
-    def who_walk(self):
+    def who_walk(self) -> str:
+        '''повертає літеру того, хто ходе (Х або О)'''
         with sqlite3.connect(database_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT who_walk FROM xo_games WHERE game_id=?", (self.game_id,))
@@ -83,7 +87,8 @@ class XO:
             cursor.execute("UPDATE xo_games SET who_walk=? WHERE game_id=?", (lst[0], self.game_id))
             conn.commit()
 
-    def does_win(self):
+    def does_win(self) -> bool:
+        '''перевіряє чи не виграв хтось'''
         field = self.field()
         results = [
             field['1'] + field['2'] + field['3'],
@@ -97,15 +102,18 @@ class XO:
         ]
         if self.symbols['x']*3 in results or self.symbols['o']*3 in results:
             return True
+        return False
         
-    def draw(self):
+    def draw(self) -> None:
+        '''перевіряє чи не сталася нічия'''
         field = self.field()
         if list(field.values()).count(self.symbols['x']) + list(field.values()).count(self.symbols['o']) == 9:
             return True
         
         return False
     
-    def make_move(self, number_of_field):
+    def make_move(self, number_of_field: str) -> bool:
+        '''робе хід приймаючи індекс клітинку'''
         field = self.field()
         walk_is = self.who_walk()
         
@@ -117,7 +125,8 @@ class XO:
         self._who_walk_update()
         return True
     
-    def del_game(self):
+    def del_game(self) -> None:
+        '''видаляє поточну гру з бази даних'''
         with sqlite3.connect(database_path) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM xo_games WHERE game_id=?", (self.game_id,))
