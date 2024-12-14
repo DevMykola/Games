@@ -104,7 +104,7 @@ class XO:
             return True
         return False
         
-    def draw(self) -> None:
+    def draw(self) -> bool:
         '''перевіряє чи не сталася нічия'''
         field = self.field()
         if list(field.values()).count(self.symbols['x']) + list(field.values()).count(self.symbols['o']) == 9:
